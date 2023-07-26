@@ -9,10 +9,10 @@ function Square({handleClick, value}) {
 }
 
 export default function Board() {
-    const [isX, setValue] = useState(true);
+    const [isX, setXO] = useState(true);
 
     function trackState() {
-        setValue(!isX);
+        setXO(!isX);
     }
 
     const [squares, setSquares] = useState(Array.from({ length: 3 }, () => Array(3).fill(null)));
@@ -20,6 +20,10 @@ export default function Board() {
     const winner = checkWinner(squares);
 
     const status = winner ? `Winner: ${winner}` : `Next player: ${isX ? "X" : "O"}`;
+    function reset() {
+        setSquares(Array.from({ length: 3 }, () => Array(3).fill(null)));
+        setXO(true);
+    }
 
     function handleClick(i, j) {
         const squaresCopy = squares.slice();
@@ -45,8 +49,14 @@ export default function Board() {
     ));
 
     return (
-        <>  <div className='status'>{status}</div>
-            {board}
+        <>
+            <div className='status'>{status}</div>
+            <div className='game-container'>
+                {board}
+                <div className='reset-container'>
+                    <button onClick={reset}>reset</button>
+                </div>
+            </div>
         </>
     );
 }
