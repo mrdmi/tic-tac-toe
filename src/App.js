@@ -1,6 +1,7 @@
 import {useState} from "react";
 
 function Square({handleClick, value}) {
+
     return  <button
                 className="square"
                 onClick={handleClick}>
@@ -8,35 +9,18 @@ function Square({handleClick, value}) {
             </button>;
 }
 
-export default function Board() {
-    const [isX, setXO] = useState(true);
-
-    function trackState() {
-        setXO(!isX);
-    }
-
-    const [squares, setSquares] = useState(Array.from({ length: 3 }, () => Array(3).fill(null)));
+function Board({isX, squares, onPlay}) {
 
     const winner = checkWinner(squares);
 
     const status = winner ? `Winner: ${winner}` : `Next player: ${isX ? "X" : "O"}`;
-    function reset() {
-        setSquares(Array.from({ length: 3 }, () => Array(3).fill(null)));
-        setXO(true);
-    }
+
 
     function handleClick(i, j) {
-        const squaresCopy = squares.slice();
-
-        if (!squaresCopy[i][j] && !winner) {
-            if (isX) {
-                squaresCopy[i][j] = 'X';
-            } else {
-                squaresCopy[i][j] = 'O';
-            }
-
-            trackState();
-            setSquares(squaresCopy);
+        const nextSquares = JSON.parse(JSON.stringify(squares));
+        if (!nextSquares[i][j] && !winner) {
+            nextSquares[i][j] = isX ? 'X' : 'O';
+            onPlay(nextSquares);
         }
     }
 
@@ -51,13 +35,57 @@ export default function Board() {
     return (
         <>
             <div className='status'>{status}</div>
-            <div className='game-container'>
-                {board}
-                <div className='reset-container'>
-                    <button onClick={reset}>reset</button>
+            {board}
+        </>
+    );
+}
+
+function GameInfo({history, jumpTo}) {
+    return history.map((squares, move) => {
+        const description = move > 0 ? 'Go to move #' + move : 'Go to game start';
+        return (
+            <li key={move}>
+                <button onClick={() => jumpTo(move)}>{description}</button>
+            </li>
+        );
+    });
+}
+
+export default function Game() {
+    const [history, setHistory] = useState([Array.from({ length: 3 }, () => Array(3).fill(null))]);
+    const [currentMove, setCurrentMove] = useState(0);
+    const isX = currentMove % 2 === 0;
+    const currentSquares = history[currentMove];
+
+    function reset() {
+        setHistory([Array.from({ length: 3 }, () => Array(3).fill(null))]);
+        setCurrentMove(0);
+    }
+
+    function handlePlay(nextSquares) {
+        const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
+        setHistory(nextHistory);
+        setCurrentMove(nextHistory.length - 1);
+    }
+
+    function jumpTo(nextMove) {
+        setCurrentMove(nextMove);
+    }
+
+    return (
+        <div className="game">
+            <div className="game-board">
+                <div className='game-container'>
+                <Board isX={isX} squares={currentSquares} onPlay={handlePlay}/>
+                    <div className='reset-container'>
+                        <button onClick={reset}>reset</button>
+                    </div>
                 </div>
             </div>
-        </>
+            <div className="game-info">
+                <ol>{<GameInfo history={history} jumpTo={jumpTo}/>}</ol>
+            </div>
+        </div>
     );
 }
 
